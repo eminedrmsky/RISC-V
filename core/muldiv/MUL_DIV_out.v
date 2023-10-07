@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 module DIVout(
     input [31:0] Q,
     input [31:0] R,

@@ -1,5 +1,10 @@
 #!/bin/sh
 
+#Run fundamental operations
+echo "Testing fundamental operations..."
+cd fundamental_operations
+./fundamental_operations_script
+cd ..
 #Run bubble sort
 echo "Testing bubble sort..."
 cd bubble_sort

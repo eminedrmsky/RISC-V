@@ -5,6 +5,7 @@ The module utilizes a finite state machine to realize the task.
 */
 
 //bits in the CSRs
+`timescale 1ns/1ps
 `define mstatus_mie mstatus[3]
 `define mstatus_mpie mstatus[7]
 `define mie_meie mie[11]

@@ -1,4 +1,4 @@
-
+`timescale 1ns/1ps
 module memory_2rw_wb(
 input         port0_wb_cyc_i,
 input         port0_wb_stb_i,

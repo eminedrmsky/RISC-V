@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 module MULDIV_in(
     input [31:0] in_A,
     input [31:0] in_B,

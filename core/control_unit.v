@@ -2,14 +2,14 @@
 Control Unit
 This module is responsible for generating the necessary control signals for the core.
 */
-
+`timescale 1ns/1ps
 module control_unit(input [31:0] instr_i,
 
                     output reg muldiv_start,
                     output reg muldiv_sel,
                     output reg [1:0] op_mul,
                     output reg [1:0] op_div,
-                    output reg [3:0] ALU_func,
+                    output reg [4:0] ALU_func,
                     output reg [1:0] CSR_ALU_func,
                     output reg EX_mux1, EX_mux3, EX_mux5, EX_mux7, EX_mux8,
                     output reg [1:0] EX_mux6,
@@ -81,13 +81,13 @@ begin
 			EX_mux3 = data2_EX;
 			EX_mux1 = data1_EX;
 			case(funct3)
-				3'b000: ALU_func = 4'b1010; //BEQ
-				3'b001: ALU_func = 4'b1011; //BNE
-				3'b100: ALU_func = 4'b0110; //BLT
-				3'b101: ALU_func = 4'b1101; //BGE
-				3'b110: ALU_func = 4'b0101; //BLTU
-				3'b111: ALU_func = 4'b1100; //BGEU
-				default: ALU_func = 4'b0000;
+				3'b000: ALU_func = 5'b01010; //BEQ
+				3'b001: ALU_func = 5'b01011; //BNE
+				3'b100: ALU_func = 5'b00110; //BLT
+				3'b101: ALU_func = 5'b01101; //BGE
+				3'b110: ALU_func = 5'b00101; //BLTU
+				3'b111: ALU_func = 5'b01100; //BGEU
+				default: ALU_func = 5'b00000;
 			endcase
 		end
 
@@ -109,7 +109,7 @@ begin
 			EX_mux5 = 1'b0;
 			EX_mux3 = imm_EX;
 			EX_mux1 = pc_EX;
-			ALU_func = 4'b1111;
+			ALU_func = 5'b01111;
 		end
 
 		//AUIPC
@@ -130,7 +130,7 @@ begin
 			EX_mux5 = 1'b0;
 			EX_mux3 = imm_EX;
 			EX_mux1 = pc_EX;
-			ALU_func = 4'b0000;
+			ALU_func = 5'b00000;
 		end
 
 		//JAL, JALR
@@ -150,7 +150,7 @@ begin
 			EX_mux6 = 2'b0;
 			EX_mux3 = data2_EX;
 			EX_mux1 = pc_EX;
-			ALU_func = 4'b1110;
+			ALU_func = 5'b01110;
 
 			case(opcode[3])
 				1'b1: EX_mux5 = 1'b1; //JAL
@@ -174,7 +174,7 @@ begin
 			EX_mux5 = 1'b0;
 			EX_mux3 = imm_EX;
 			EX_mux1 = data1_EX;
-			ALU_func = 4'b0000;
+			ALU_func = 5'b00000;
 
 			case(funct3)
 				3'b000: begin WB_sign = 1'b1; MEM_len = 2'd0; end //LB
@@ -203,7 +203,7 @@ begin
 			EX_mux5 = 1'b0;
 			EX_mux3 = imm_EX;
 			EX_mux1 = data1_EX;
-			ALU_func = 4'b0000;
+			ALU_func = 5'b00000;
 
 			case(funct3)
 				3'b000: MEM_len = 2'd0; //SB
@@ -246,25 +246,36 @@ begin
 				3'b000:
 				begin //ADD, ADDI, SUB
 					if(opcode[5]) //see if it is an add or a subtract
-						ALU_func = {3'b0,funct7[5]}; //ADD, SUB
+						ALU_func = {4'b0,funct7[5]}; //ADD, SUB
 				 	else
-				 		ALU_func = 4'b0; //ADDI
+				 		ALU_func = 5'b0; //ADDI
 				end
 
-				3'b001: ALU_func = 4'b0111; //SLL, SLLI
-				3'b010: ALU_func = 4'b0110; //SLT, SLTI
-				3'b011: ALU_func = 4'b0101; //SLTU, SLTIU
-				3'b100: ALU_func = 4'b0010; //XOR, XORI
+				3'b001: ALU_func = 5'b00111; //SLL, SLLI
+				3'b010: ALU_func = 5'b00110; //SLT, SLTI
+				3'b011: ALU_func = 5'b00101; //SLTU, SLTIU
+				3'b100: ALU_func = 5'b00010; //XOR, XORI
 				3'b101:
 				begin //SRA, SRAI, SRL, SRLI
 					if(funct7[5])
-						ALU_func = 4'b1001; //SRA, SRAI
+						ALU_func = 5'b01001; //SRA, SRAI
 					else
-						ALU_func = 4'b1000; //SRL, SRLI
+						ALU_func = 5'b01000; //SRL, SRLI
 				end
 
-				3'b110: ALU_func = 4'b0011; //OR, ORI
-				3'b111:	ALU_func = 4'b0100; //AND, ANDI
+				3'b110: ALU_func = 5'b00011; //OR, ORI
+				3'b111:
+				begin //AND, ANDI, NAND
+					if(opcode[5])
+					
+						if(funct7[5])
+							ALU_func = {5'b10100}; //  CUSTOM
+						else
+							ALU_func = {5'b00100}; //  AND
+					else
+						ALU_func = 5'b00100; //ANDI
+				end
+					
 			endcase
 		end
 
@@ -285,7 +296,7 @@ begin
 			EX_mux6 = 2'd1;
 			EX_mux7 = 1'b0;
 			EX_mux8 = funct3[2];
-            ALU_func = 4'd0;
+            		ALU_func = 5'd0;
 
 			casez(funct3)
 				3'b?01: CSR_ALU_func = 2'd0; //RW,RWI
@@ -297,7 +308,7 @@ begin
 		end
 
 		default: begin
-			ALU_func = 4'b0;
+			ALU_func = 5'b0;
 			CSR_ALU_func = 2'b0;
 			{EX_mux5, EX_mux6, EX_mux7, EX_mux1, EX_mux3, EX_mux8} = 7'b0;
 			{B, J} = 2'b0;
@@ -359,7 +370,7 @@ begin
 					if(funct7 == 7'd1)
 						illegal_instr = 1'b0;
 
-					else if(funct3 == 3'd0 || funct3 == 3'd5)
+					else if(funct3 == 3'd0 || funct3 == 3'd5 || funct3 == 3'd7)
 						illegal_instr = {funct7[6],funct7[4:0]} != 6'd0;
 
 					else

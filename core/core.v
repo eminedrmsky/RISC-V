@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 module core(input reset_i, //active-low reset
 
             input clk_i,
@@ -50,7 +51,7 @@ wire ctrl_unit_muldiv_sel;
 wire [1:0] ctrl_unit_op_mul;
 wire [1:0] ctrl_unit_op_div;
 
-wire [3:0] ctrl_unit_alu_func;
+wire [4:0] ctrl_unit_alu_func;
 wire [1:0] ctrl_unit_csr_alu_func;
 wire       ctrl_unit_ex_mux1, ctrl_unit_ex_mux3, ctrl_unit_ex_mux5, ctrl_unit_ex_mux7, ctrl_unit_ex_mux8;
 wire [1:0] ctrl_unit_ex_mux6;
@@ -64,7 +65,7 @@ wire       ctrl_unit_illegal_instr, ctrl_unit_ecall, ctrl_unit_ebreak;
 wire        mux_ctrl_ID; //control signal for all three muxes
 wire [6:0]  mux1_o_ID; //WB field
 wire [2:0]  mux2_o_ID; //MEM field
-wire [20:0] mux3_o_ID; //EX field
+wire [21:0] mux3_o_ID; //EX field
 
 wire [29:0] imm_dec_i; //immediate decoder input
 wire [31:0] imm_dec_o; //immediate decoder output
@@ -75,7 +76,7 @@ reg [31:0] IDEX_preg_imm;
 reg [4:0]  IDEX_preg_rd, IDEX_preg_rs2, IDEX_preg_rs1;
 reg [31:0] IDEX_preg_data2, IDEX_preg_data1;
 reg [31:0] IDEX_preg_pc;
-reg [20:0] IDEX_preg_ex;
+reg [21:0] IDEX_preg_ex;
 reg [2:0]  IDEX_preg_mem;
 reg [6:0]  IDEX_preg_wb;
 reg [11:0] IDEX_preg_csr_addr;
@@ -97,7 +98,7 @@ wire muldiv_stall_EX;
 //signals from previous stage
 wire [6:0]  wb_EX;
 wire [2:0]  mem_EX;
-wire [20:0] ex_EX;
+wire [21:0] ex_EX;
 wire [31:0] pc_EX, data1_EX, data2_EX, imm_EX;
 wire [4:0]  rs1_EX, rs2_EX, rd_EX;
 wire [11:0] csr_addr_EX;
@@ -107,7 +108,7 @@ wire [1:0]  mux2_ctrl_EX,  mux4_ctrl_EX, mux6_ctrl_EX;
 wire        mux1_ctrl_EX, mux3_ctrl_EX, mux5_ctrl_EX, mux7_ctrl_EX, mux8_ctrl_EX;
 wire [31:0] mux1_o_EX, mux2_o_EX, mux3_o_EX, mux4_o_EX, mux5_o_EX, mux6_o_EX, mux7_o_EX, mux8_o_EX;
 //ALU signals
-wire [3:0]  alu_func;
+wire [4:0]  alu_func;
 wire [1:0]  csr_alu_func;
 wire [31:0] aluout_EX;
 wire [31:0] csr_alu_out;
@@ -312,7 +313,7 @@ assign mux1_o_ID    = mux_ctrl_ID ? 7'h0c : {ctrl_unit_wb_mux,
 
 assign mux2_o_ID    = mux_ctrl_ID ? 3'b1 : {ctrl_unit_mem_len, ctrl_unit_mem_wen};
 
-assign mux3_o_ID    = mux_ctrl_ID ? 21'b0 : {ctrl_unit_op_div,
+assign mux3_o_ID    = mux_ctrl_ID ? 22'b0 : {ctrl_unit_op_div,
                                              ctrl_unit_op_mul,
                                              ctrl_unit_muldiv_sel,
                                              ctrl_unit_muldiv_start,
@@ -376,7 +377,7 @@ begin
 		IDEX_preg_wb <= 7'h0c;
 		IDEX_preg_mem <= 3'b1;
 		IDEX_preg_csr_addr <= 12'b0;
-		IDEX_preg_ex <= 21'b0;
+		IDEX_preg_ex <= 22'b0;
 		{IDEX_preg_pc, IDEX_preg_data1, IDEX_preg_data2} <= 96'b0;
 		{IDEX_preg_rs1, IDEX_preg_rs2, IDEX_preg_rd} <= 15'b0;
 		IDEX_preg_imm  <= 32'b0;
@@ -390,7 +391,7 @@ begin
 		IDEX_preg_wb <= 7'h0c;
 		IDEX_preg_mem <= 3'b1;
 		IDEX_preg_csr_addr <= 12'b0;
-		IDEX_preg_ex <= 21'b0;
+		IDEX_preg_ex <= 22'b0;
 		{IDEX_preg_pc, IDEX_preg_data1, IDEX_preg_data2} <= 96'b0;
 		{IDEX_preg_rs1, IDEX_preg_rs2, IDEX_preg_rd} <= 15'b0;
 		IDEX_preg_imm  <= 32'b0;
@@ -493,20 +494,20 @@ assign rd_EX    = IDEX_preg_rd;
 assign imm_EX   = IDEX_preg_imm;
 assign csr_addr_EX = IDEX_preg_csr_addr;
 //assign nets
-assign alu_func     = ex_EX[3:0];
-assign csr_alu_func = ex_EX[5:4];
-assign mux1_ctrl_EX = ex_EX[6];
-assign mux3_ctrl_EX = ex_EX[7];
-assign mux5_ctrl_EX = ex_EX[8];
-assign mux6_ctrl_EX = ex_EX[10:9];
-assign mux7_ctrl_EX = ex_EX[11];
-assign mux8_ctrl_EX = ex_EX[12];
-assign J            = ex_EX[13]; //jump
-assign B            = ex_EX[14]; //branch
-assign muldiv_start = ex_EX[15];
-assign muldiv_sel   = ex_EX[16];
-assign op_mul       = ex_EX[18:17];
-assign op_div       = ex_EX[20:19];
+assign alu_func     = ex_EX[4:0];
+assign csr_alu_func = ex_EX[6:5];
+assign mux1_ctrl_EX = ex_EX[7];
+assign mux3_ctrl_EX = ex_EX[8];
+assign mux5_ctrl_EX = ex_EX[9];
+assign mux6_ctrl_EX = ex_EX[11:10];
+assign mux7_ctrl_EX = ex_EX[12];
+assign mux8_ctrl_EX = ex_EX[13];
+assign J            = ex_EX[14]; //jump
+assign B            = ex_EX[15]; //branch
+assign muldiv_start = ex_EX[16];
+assign muldiv_sel   = ex_EX[17];
+assign op_mul       = ex_EX[19:18];
+assign op_div       = ex_EX[21:20];
 assign L            = (!wb_EX[3] && wb_EX[6:5] == 2'b1) ? 1'b1 : 1'b0; //load
 assign mem_wen_EX   = muldiv_stall_EX ? 1'b1 : (csr_ex_flush ? 1'b1 : mem_EX[0]);
 assign mem_length_EX = mem_EX[2:1];

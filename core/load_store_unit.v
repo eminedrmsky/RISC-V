@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 module load_store_unit(input clk_i,
                        input reset_i,
 
